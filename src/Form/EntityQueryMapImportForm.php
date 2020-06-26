@@ -73,7 +73,7 @@ class EntityQueryMapImportForm extends EntityForm {
     $entity->set('map', array_flip((array) json_decode($json)));
     $entity->save();
 
-    drupal_set_message($this->t('Saved the query map version %id.', [
+    $this->messenger()->addStatus($this->t('Saved the query map version %id.', [
       '%id' => $entity->id(),
     ]));
 

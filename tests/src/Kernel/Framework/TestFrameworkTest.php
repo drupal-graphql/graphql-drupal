@@ -35,7 +35,7 @@ class TestFrameworkTest extends GraphQLTestBase {
     ]);
 
     $schema = $this->introspect();
-    $this->assertArraySubset([
+    $expectedSubset = [
       'types' => [
         'Query' => [
           'fields' => [
@@ -49,7 +49,11 @@ class TestFrameworkTest extends GraphQLTestBase {
           ],
         ],
       ],
-    ], $schema);
+    ];
+    foreach ($expectedSubset as $key => $value) {
+      $this->assertArrayHasKey($key, $schema);
+      $this->assertSame($value, $schema[$key]);
+    }
 
     $this->assertResults('{ root }', [], [
       'root' => 'test',

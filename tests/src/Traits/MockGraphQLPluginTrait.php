@@ -372,7 +372,7 @@ trait MockGraphQLPluginTrait {
    * @param mixed|null $applies
    *   A result for the types "applies" method. Defaults to `TRUE`.
    *
-   * @return \PHPUnit_Framework_MockObject_MockObject
+   * @return \PHPUnit\Framework\MockObject\MockObject
    *   The type mock object.
    */
   protected function mockType($id, array $definition, $applies = TRUE, $builder = NULL) {
@@ -463,7 +463,7 @@ trait MockGraphQLPluginTrait {
    *   A result for this mutation. Can be a value or a callback. If omitted, no
    *   resolve method mock will be attached.
    *
-   * @return \PHPUnit_Framework_MockObject_MockObject
+   * @return \PHPUnit\Framework\MockObject\MockObject
    *   The mutation mock object.
    */
   protected function mockMutation($id, array $definition, $result = NULL, $builder = NULL) {
@@ -513,7 +513,7 @@ trait MockGraphQLPluginTrait {
    * @param array $definition
    *   The plugin definition. Will be merged with the interface defaults.
    *
-   * @return \PHPUnit_Framework_MockObject_MockObject
+   * @return \PHPUnit\Framework\MockObject\MockObject
    *   The interface mock object.
    */
   protected function mockInterface($id, array $definition, $builder = NULL) {
@@ -555,7 +555,7 @@ trait MockGraphQLPluginTrait {
    * @param array $definition
    *   The plugin definition. Will be merged with the union defaults.
    *
-   * @return \PHPUnit_Framework_MockObject_MockObject
+   * @return \PHPUnit\Framework\MockObject\MockObject
    *   The union mock object.
    */
   protected function mockUnion($id, array $definition, $builder = NULL) {

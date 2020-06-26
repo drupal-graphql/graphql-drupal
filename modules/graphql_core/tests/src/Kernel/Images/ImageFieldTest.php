@@ -70,7 +70,7 @@ class ImageFieldTest extends GraphQLContentTestBase {
           'image' => [[
             'alt' => $a->image->alt,
             'title' => $a->image->title,
-            'entity' => ['url' => $a->image->entity->url()],
+            'entity' => ['url' => $a->image->entity->toUrl()],
             'width' => $a->image[0]->width,
             'height' => $a->image[0]->height,
             'thumbnailImage' => [

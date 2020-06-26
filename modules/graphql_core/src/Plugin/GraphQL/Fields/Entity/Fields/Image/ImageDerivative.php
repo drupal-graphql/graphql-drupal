@@ -85,7 +85,7 @@ class ImageDerivative extends FieldPluginBase implements ContainerFactoryPluginI
         $url = $style->buildUrl($file->getFileUri());
       }
       else {
-        $url = $file->url();
+        $url = $file->toUrl();
       }
 
       yield new CacheableValue([

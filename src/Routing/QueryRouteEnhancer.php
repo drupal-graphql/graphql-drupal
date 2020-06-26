@@ -3,39 +3,36 @@
 namespace Drupal\graphql\Routing;
 
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Routing\Enhancer\RouteEnhancerInterface;
+use Drupal\Core\Routing\EnhancerInterface;
 use Drupal\graphql\GraphQL\QueryProvider\QueryProviderInterface;
 use Drupal\graphql\Utility\JsonHelper;
 use GraphQL\Server\Helper;
+use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
-class QueryRouteEnhancer implements RouteEnhancerInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(Route $route) {
-    return $route->hasDefault('_graphql');
-  }
+class QueryRouteEnhancer implements EnhancerInterface {
 
   /**
    * {@inheritdoc}
    */
   public function enhance(array $defaults, Request $request) {
-    $helper = new Helper();
-    $method = $request->getMethod();
-    $body = $this->extractBody($request);
-    $query = $this->extractQuery($request);
-    $operations = $helper->parseRequestParams($method, $body, $query);
+    $route = $defaults[RouteObjectInterface::ROUTE_OBJECT];
+    if ($route->hasDefault('_graphql')) {
+      $helper = new Helper();
+      $method = $request->getMethod();
+      $body = $this->extractBody($request);
+      $query = $this->extractQuery($request);
+      $operations = $helper->parseRequestParams($method, $body, $query);
 
-    // By default we assume a 'single' request. This is going to fail in the
-    // graphql processor due to a missing query string but at least provides
-    // the right format for the client to act upon.
-    return $defaults + [
-      '_controller' => $defaults['_graphql']['single'],
-      'operations' => $operations,
-    ];
+      // By default we assume a 'single' request. This is going to fail in the
+      // graphql processor due to a missing query string but at least provides
+      // the right format for the client to act upon.
+      return $defaults + [
+        '_controller' => $defaults['_graphql']['single'],
+        'operations' => $operations,
+      ];
+    }
   }
 
   /**

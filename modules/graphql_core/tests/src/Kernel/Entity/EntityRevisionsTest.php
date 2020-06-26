@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\graphql_core\Kernel\Context;
+namespace Drupal\Tests\graphql_core\Kernel\Entity;
 
 use Drupal\node\Entity\Node;
 use Drupal\Tests\graphql_core\Kernel\GraphQLContentTestBase;

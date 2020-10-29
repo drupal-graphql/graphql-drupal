@@ -2,12 +2,15 @@
 
 namespace Drupal\graphql_core\Plugin\GraphQL\Fields\Routing;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Path\PathValidatorInterface;
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Url;
 use Drupal\graphql\GraphQL\Cache\CacheableValue;
 use Drupal\graphql\GraphQL\Execution\ResolveContext;
 use Drupal\graphql\Plugin\GraphQL\Fields\FieldPluginBase;
+use Drupal\redirect\RedirectRepository;
 use GraphQL\Type\Definition\ResolveInfo;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -60,6 +63,13 @@ class Route extends FieldPluginBase implements ContainerFactoryPluginInterface {
   protected $pathProcessor;
 
   /**
+   * The Redirect config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -71,7 +81,8 @@ class Route extends FieldPluginBase implements ContainerFactoryPluginInterface {
       $container->get('language_negotiator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
       $container->get('language_manager'),
       $container->get('redirect.repository', ContainerInterface::NULL_ON_INVALID_REFERENCE),
-      $container->get('path_processor_manager')
+      $container->get('path_processor_manager'),
+      $container->get('config.factory')
     );
   }
 
@@ -94,6 +105,8 @@ class Route extends FieldPluginBase implements ContainerFactoryPluginInterface {
    *   The redirect repository, if redirect module is active.
    * @param \Drupal\Core\PathProcessor\InboundPathProcessorInterface
    *   An inbound path processor, to clean paths before redirect lookups.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
    */
   public function __construct(
     array $configuration,
@@ -103,7 +116,8 @@ class Route extends FieldPluginBase implements ContainerFactoryPluginInterface {
     $languageNegotiator,
     $languageManager,
     $redirectRepository,
-    $pathProcessor
+    $pathProcessor,
+    ConfigFactoryInterface $configFactory
   ) {
     parent::__construct($configuration, $pluginId, $pluginDefinition);
     $this->redirectRepository = $redirectRepository;
@@ -111,6 +125,7 @@ class Route extends FieldPluginBase implements ContainerFactoryPluginInterface {
     $this->pathValidator = $pathValidator;
     $this->languageNegotiator = $languageNegotiator;
     $this->languageManager = $languageManager;
+    $this->config = $configFactory->get('redirect.settings');
   }
 
   /**
@@ -155,8 +170,40 @@ class Route extends FieldPluginBase implements ContainerFactoryPluginInterface {
       $processedPath = $this->pathProcessor
         ->processInbound($args['path'], Request::create($args['path']));
 
-      if ($redirect = $this->redirectRepository->findMatchingRedirect($processedPath, [], $currentLanguage)) {
-        yield $redirect;
+      // Create new Request from path to split pathname & query.
+      /** @var Request $sourceRequest */
+      $sourceRequest = Request::create($processedPath);
+
+      // Get pathname from request path without leading /.
+      /** @var RedirectRepository $redirect_service */
+      $sourcePath = trim($sourceRequest->getPathInfo(), '/');
+
+      // Get query from request path.
+      $sourceQuery = $sourceRequest->query->all();
+
+      // Get the redirect entity by the path (without query string) and the query string separately.
+      if ($redirectEntity =
+        $this->redirectRepository->findMatchingRedirect($sourcePath, $sourceQuery, $currentLanguage)) {
+        $passthroughQueryString = $this->config->get('passthrough_querystring');
+
+        // Check whether to retain query parameters.
+        if ($passthroughQueryString) {
+          // Get URL from redirect destination.
+          $redirectUrl = Url::fromUri($redirectEntity->getRedirect()['uri']);
+
+          // Merge the query string from the current query (requested path) with the query string configured in the
+          // redirect entity.
+          $mergedQuery = ($redirectUrl->getOption('query') ?? []) + $sourceQuery;
+
+          // Delete the query string from the url object since we want to pass that separately later.
+          $redirectUrl->setOption('query', []);
+
+          // Replace the original redirect based on the source URL, but add the query object this time and overwrite
+          // those params with those from the redirect entity.
+          $redirectEntity->setRedirect($redirectUrl->toString(), $mergedQuery);
+        }
+
+        yield $redirectEntity;
         return;
       }
     }

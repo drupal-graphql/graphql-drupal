@@ -331,9 +331,14 @@ class PluggableSchemaDeriver extends DeriverBase implements ContainerDeriverInte
 
     $assocations = array_map('array_unique', array_reduce($assocations, 'array_merge_recursive', []));
     $assocations = array_map(function ($parent) use ($types) {
-      $children = array_map(function ($child) use ($types) {
+      $children = array_filter(array_map(function ($child) use ($types) {
+        // It's possible that a plugin exists, that references a type that does not yet exist. That's because while
+        // syncing config, the modules are installed before the content types and their fields are created.
+        if (!isset($types[$child]) && \Drupal::isConfigSyncing()) {
+          return null;
+        }
         return $types[$child] + ['name' => $child];
-      }, $parent);
+      }, $parent));
 
       uasort($children,[SortArray::class, 'sortByWeightElement']);
       $children = array_reverse($children);

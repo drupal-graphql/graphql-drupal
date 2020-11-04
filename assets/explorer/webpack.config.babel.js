@@ -1,72 +1,44 @@
-import webpack from 'webpack';
-import path from 'path';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
+import webpack from "webpack";
+import path from "path";
+import CopyWebpackPlugin from "copy-webpack-plugin";
 
 module.exports = {
-  context: path.resolve(__dirname, 'src'),
-  entry: './index.js',
+  context: path.resolve(__dirname, "src"),
+  entry: "./index.js",
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.min.js',
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.min.js",
   },
   resolve: {
-    extensions: ['.jsx', '.js', '.json'],
-    modules: [
-      path.resolve(__dirname, 'node_modules'),
-      'node_modules',
-    ],
+    extensions: [".mjs", ".jsx", ".js", ".json"],
+    modules: [path.resolve(__dirname, "node_modules"), "node_modules"],
   },
-
+  mode: "production",
   module: {
     rules: [
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        use: 'babel-loader',
+        use: "babel-loader",
       },
     ],
   },
-  plugins: ([
+  optimization: {
+    minimize: true,
+  },
+  plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
     }),
-    new CopyWebpackPlugin([
-      { from: path.resolve(__dirname, 'node_modules/graphiql/graphiql.css') },
-      { from: path.resolve(__dirname, 'src/container.css') },
-    ]),
-  ]).concat(process.env.NODE_ENV === 'production' ? [
-    new webpack.optimize.UglifyJsPlugin({
-      output: {
-        comments: false,
-      },
-      compress: {
-        unsafe_comps: true,
-        properties: true,
-        keep_fargs: false,
-        pure_getters: true,
-        collapse_vars: true,
-        unsafe: true,
-        warnings: false,
-        screw_ie8: true,
-        sequences: true,
-        dead_code: true,
-        drop_debugger: true,
-        comparisons: true,
-        conditionals: true,
-        evaluate: true,
-        booleans: true,
-        loops: true,
-        unused: true,
-        hoist_funs: true,
-        if_return: true,
-        join_vars: true,
-        cascade: true,
-        drop_console: true,
-      },
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: path.resolve(__dirname, "node_modules/graphiql/graphiql.css") },
+        { from: path.resolve(__dirname, "src/container.css") },
+      ],
     }),
-  ] : []),
+  ],
   externals: {
-    jquery: 'jQuery',
-    drupal: 'Drupal',
+    jquery: "jQuery",
+    drupal: "Drupal",
   },
 };

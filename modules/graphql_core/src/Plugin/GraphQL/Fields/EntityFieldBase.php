@@ -3,6 +3,8 @@
 namespace Drupal\graphql_core\Plugin\GraphQL\Fields;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity;
 use Drupal\Core\Entity\EntityInterface;
@@ -25,7 +27,8 @@ class EntityFieldBase extends FieldPluginBase {
     if ($item instanceof FieldItemInterface) {
       $definition = $this->getPluginDefinition();
       $property = $definition['property'];
-      $result = $item->get($property)->getValue();
+      $itemProperty = $item->get($property);
+      $result = $itemProperty->getValue();
       $result = $result instanceof MarkupInterface ? $result->__toString() : $result;
 
       $type = $info->returnType;
@@ -38,6 +41,12 @@ class EntityFieldBase extends FieldPluginBase {
         if ($result->hasTranslation($language)) {
           $result = $result->getTranslation($language);
         }
+      }
+
+      if ($itemProperty instanceof CacheableDependencyInterface) {
+        $context->addCacheTags($itemProperty->getCacheTags());
+        $context->addCacheContexts($itemProperty->getCacheContexts());
+        $context->mergeCacheMaxAge($itemProperty->getCacheMaxAge());
       }
 
       return $result;

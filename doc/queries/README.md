@@ -80,3 +80,56 @@ If we paste the above query in GraphiQL we will get the following result :
   }
 }
 ```
+
+## Example of all features
+```
+{
+  nodeQuery(filter: {
+    conjunction: AND
+    conditions: [{
+      field: "nid"
+      value: ["1", "10"]
+      operator: BETWEEN
+    }]
+    groups: [{
+      conjunction: OR
+      conditions: [{
+        field: "title"
+        value: ["graphql filtering rocks"]
+      }, {
+        field: "title"
+        value: ["graphql is awesome"]
+        operator: LIKE
+      }, {
+        field: "uid"
+        value: ["1"]
+      }],
+      groups: [{
+        conjunction: AND
+        conditions: [{
+          field: "field_tags.target_id"
+          value: ["1"]
+        }]
+      }]
+    }]
+  }, sort: [{
+    field: "nid"
+    direction: ASC
+  }, {
+    field: "uid"
+    direction: DESC
+  }]) {
+    entities {
+      entityUuid
+      entityBundle
+      entityPublished
+      entityType
+      entityChanged
+      entityId
+      entityCreated
+      entityLabel
+    }
+  }
+}
+```
+

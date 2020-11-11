@@ -78,6 +78,7 @@ class JsonQueryMapConfigForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->cacheBackend->delete('graphql_query_map_json_versions');
+    $this->cacheBackend->delete('graphql_query_map_gql_versions');
 
     $paths = array_map('trim', explode("\n", $form_state->getValue('lookup_paths', '')));
     $this->config('graphql.query_map_json.config')

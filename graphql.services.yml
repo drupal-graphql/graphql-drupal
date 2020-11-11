@@ -64,6 +64,11 @@ services:
     arguments: ['@cache.default', '@config.factory']
     tags:
         - { name: graphql_query_provider }
+  graphql.query_provider.query_map.gql:
+    class: Drupal\graphql\GraphQL\QueryProvider\GqlQueryMapQueryProvider
+    arguments: ['@cache.default', '@config.factory']
+    tags:
+      - { name: graphql_query_provider }
 
   graphql.query_routes:
     class: Drupal\graphql\Routing\QueryRoutes

@@ -34,7 +34,12 @@ class EntityField extends EntityFieldBase {
         if ($access->isAllowed()) {
           foreach ($items as $item) {
             $output = !empty($definition['property']) ? $this->resolveItem($item, $args, $context, $info) : $item;
-
+            
+            // Do not output NULL values (e.g. in case access to the field item was denied).
+            if (!isset($output)) {
+              continue;
+            }
+            
             yield new CacheableValue($output, [$access]);
           }
         }

@@ -39,6 +39,15 @@ class EntityFieldBase extends FieldPluginBase {
           $result = $result->getTranslation($language);
         }
       }
+      
+      if ($result instanceof ContentEntityInterface) {
+        $access = $result->access('view', NULL, TRUE);
+        $context->addCacheableDependency($access);
+
+        if (!$access->isAllowed()) {
+          $result = NULL;
+        }
+      }
 
       return $result;
     }

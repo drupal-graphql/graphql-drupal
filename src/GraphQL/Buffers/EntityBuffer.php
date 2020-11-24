@@ -73,9 +73,10 @@ class EntityBuffer extends BufferBase {
 
     return array_map(function ($item) use ($entities, $language) {
       if (is_array($item['id'])) {
-        return array_reduce($item['id'], function ($carry, $current) use ($entities) {
+        return array_reduce($item['id'], function ($carry, $current) use ($entities, $language) {
           if (!empty($entities[$current])) {
-            array_push($carry, $entities[$current]);
+            $entity = $language ? $entities[$current]->getTranslation($language) : $entities[$current];
+            array_push($carry, $entity);
             return $carry;
           }
 

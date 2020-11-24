@@ -30,14 +30,17 @@ class EntityBuffer extends BufferBase {
    *   The entity type of the given entity ids.
    * @param array|int $id
    *   The entity id(s) to load.
+   * @param string|null $language
+   *   Optional. Language to be respected for retrieved entities.
    *
    * @return \Closure
    *   The callback to invoke to load the result for this buffer item.
    */
-  public function add($type, $id) {
+  public function add($type, $id, ?string $language) {
     $item = new \ArrayObject([
       'type' => $type,
       'id' => $id,
+      'language' => $language
     ]);
 
     return $this->createBufferResolver($item);
@@ -55,6 +58,7 @@ class EntityBuffer extends BufferBase {
    */
   public function resolveBufferArray(array $buffer) {
     $type = reset($buffer)['type'];
+    $language = reset($buffer)['language'];
     $ids = array_map(function (\ArrayObject $item) {
       return (array) $item['id'];
     }, $buffer);
@@ -67,7 +71,7 @@ class EntityBuffer extends BufferBase {
       ->getStorage($type)
       ->loadMultiple($ids);
 
-    return array_map(function ($item) use ($entities) {
+    return array_map(function ($item) use ($entities, $language) {
       if (is_array($item['id'])) {
         return array_reduce($item['id'], function ($carry, $current) use ($entities) {
           if (!empty($entities[$current])) {
@@ -79,7 +83,9 @@ class EntityBuffer extends BufferBase {
         }, []);
       }
 
-      return isset($entities[$item['id']]) ? $entities[$item['id']] : NULL;
+      $entity = isset($entities[$item['id']]) ? $entities[$item['id']] : NULL;
+      $entity = $entity && $language ? $entity->getTranslation($language) : NULL;
+      return $entity;
     }, $buffer);
   }
 

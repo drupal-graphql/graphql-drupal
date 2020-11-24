@@ -85,7 +85,7 @@ class EntityBuffer extends BufferBase {
       }
 
       $entity = isset($entities[$item['id']]) ? $entities[$item['id']] : NULL;
-      $entity = $entity && $language ? $entity->getTranslation($language) : NULL;
+      $entity = $entity && $language ? $entity->getTranslation($language) : $entity;
       return $entity;
     }, $buffer);
   }

@@ -36,7 +36,7 @@ class EntityBuffer extends BufferBase {
    * @return \Closure
    *   The callback to invoke to load the result for this buffer item.
    */
-  public function add($type, $id, ?string $language) {
+  public function add($type, $id, string $language = NULL) {
     $item = new \ArrayObject([
       'type' => $type,
       'id' => $id,

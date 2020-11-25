@@ -1,0 +1,3 @@
+entity_query_limit_max:
+  type: integer
+  label: 'EntityQuery limit max'

@@ -3,6 +3,7 @@
 namespace Drupal\graphql_core\Plugin\GraphQL\Fields\EntityQuery;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -53,6 +54,13 @@ class EntityQuery extends FieldPluginBase implements ContainerFactoryPluginInter
   protected $entityTypeManager;
 
   /**
+   * Service config.factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $config;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $pluginId, $pluginDefinition) {
@@ -60,7 +68,8 @@ class EntityQuery extends FieldPluginBase implements ContainerFactoryPluginInter
       $configuration,
       $pluginId,
       $pluginDefinition,
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('config.factory')
     );
   }
 
@@ -75,10 +84,13 @@ class EntityQuery extends FieldPluginBase implements ContainerFactoryPluginInter
    *   The plugin definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
+   *   Service config.factory.
    */
-  public function __construct(array $configuration, $pluginId, $pluginDefinition, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(array $configuration, $pluginId, $pluginDefinition, EntityTypeManagerInterface $entityTypeManager, ConfigFactoryInterface $config) {
     parent::__construct($configuration, $pluginId, $pluginDefinition);
     $this->entityTypeManager = $entityTypeManager;
+    $this->config = $config;
   }
 
   /**
@@ -148,6 +160,14 @@ class EntityQuery extends FieldPluginBase implements ContainerFactoryPluginInter
   protected function getQuery($value, array $args, ResolveContext $context, ResolveInfo $info) {
     if (!$query = $this->getBaseQuery($value, $args, $context, $info)) {
       return NULL;
+    }
+
+    $graphql_settings = $this->config->get('graphql.settings');
+    if ($graphql_settings) {
+      $limit_max = $graphql_settings->get('entity_query_limit_max');
+      if ($limit_max && $args['limit'] > $limit_max) {
+        throw new \InvalidArgumentException("EntityQuery with too big limit parameter, max is {$limit_max}, requested was {$args['limit']}.");
+      }
     }
 
     $query->range($args['offset'], $args['limit']);

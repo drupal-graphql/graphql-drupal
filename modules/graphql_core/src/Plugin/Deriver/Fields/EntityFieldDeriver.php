@@ -42,6 +42,13 @@ class EntityFieldDeriver extends EntityFieldDeriverBase {
     if (count($propertyDefinitions) === 1) {
       $propertyDefinition = reset($propertyDefinitions);
       $derivative['type'] = $propertyDefinition->getDataType();
+
+      // Workaround for BigInt field types (integer with size = big)
+      // Treat as String instead of Integer in GraphQL, because of lack support for 64 bit integers
+      // More info: https://github.com/graphql/graphql-spec/issues/73
+      if($propertyDefinition->getDataType() == 'integer' && $itemDefinition->getSetting('size') == 'big') {
+        $derivative['type'] = 'string';
+      }
       $derivative['property'] = key($propertyDefinitions);
     }
     else {

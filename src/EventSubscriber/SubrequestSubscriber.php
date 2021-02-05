@@ -29,7 +29,7 @@ class SubrequestSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    return [KernelEvents::REQUEST => 'onKernelRequest'];
+    return [KernelEvents::REQUEST => ['onKernelRequest', 100]];
   }
 
 }

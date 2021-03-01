@@ -28,6 +28,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *     ),
  *     "style" = @ContextDefinition("string",
  *       label = @Translation("Image style")
+ *     ),
+ *     "additional_properties" = @ContextDefinition("list",
+ *       label = @Translation("Additional properties")
  *     )
  *   }
  * )
@@ -88,7 +91,7 @@ class ImageDerivative extends DataProducerPluginBase implements ContainerFactory
    *
    * @return array|null
    */
-  public function resolve(FileInterface $entity = NULL, $style, RefinableCacheableDependencyInterface $metadata) {
+  public function resolve(FileInterface $entity = NULL, $style, array $additional_properties = [], RefinableCacheableDependencyInterface $metadata) {
     // Return if we dont have an entity.
     if (!$entity) {
       return NULL;
@@ -132,11 +135,18 @@ class ImageDerivative extends DataProducerPluginBase implements ContainerFactory
         $metadata->addCacheableDependency($context->pop());
       }
 
-      return [
+      $return = [
+        'id' => $entity->id(),
         'url' => $url,
         'width' => $dimensions['width'],
         'height' => $dimensions['height'],
       ];
+
+      foreach($additional_properties as $property) {
+        $return[$property] = $entity->get($property)->value;
+      }
+
+      return $return;
     }
 
     return NULL;

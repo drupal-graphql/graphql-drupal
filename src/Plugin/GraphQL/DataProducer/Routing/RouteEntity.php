@@ -126,7 +126,7 @@ class RouteEntity extends DataProducerPluginBase implements ContainerFactoryPlug
 
         // Get the correct translation.
         if (isset($language) && $language != $entity->language()->getId() && $entity instanceof TranslatableInterface && $entity->isTranslatable()) {
-          if($entity->hasTranslation($language)){
+          if ($entity->hasTranslation($language)) {
             $entity = $entity->getTranslation($language);
             $entity->addCacheContexts(["static:language:{$language}"]);
           }

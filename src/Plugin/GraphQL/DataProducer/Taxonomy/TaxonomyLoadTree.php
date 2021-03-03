@@ -174,9 +174,11 @@ class TaxonomyLoadTree extends DataProducerPluginBase implements ContainerFactor
       foreach ($entities as $id => $entity) {
         $context->addCacheableDependency($entities[$id]);
 
-        if (isset($language) && $language !== $entities[$id]->language()->getId() && $entities[$id] instanceof TranslatableInterface) {
-          $entities[$id] = $entities[$id]->getTranslation($language);
-          $entities[$id]->addCacheContexts(["static:language:{$language}"]);
+        if (isset($language) && $language !== $entities[$id]->language()->getId() && $entities[$id] instanceof TranslatableInterface && $entities[$id]->isTranslatable()) {
+          if($entities[$id]->hasTranslation($language)){
+            $entities[$id] = $entities[$id]->getTranslation($language);
+            $entities[$id]->addCacheContexts(["static:language:{$language}"]);
+          }
         }
 
         if ($access) {

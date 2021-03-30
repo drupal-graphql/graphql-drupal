@@ -64,7 +64,7 @@ class GraphQLLanguageContext {
    */
   public function getCurrentLanguage() {
     return $this->isActive
-      ? ($this->currentLanguage ?: $this->languageManager->getDefaultLanguage()->getId())
+      ? ($this->currentLanguage ?: $this->languageManager->getCurrentLanguage()->getId())
       : NULL;
   }
 
@@ -112,7 +112,7 @@ class GraphQLLanguageContext {
       // Restore the languages for the translation and language managers.
       $defaultLangcode = !empty($this->currentLanguage)
         ? $this->currentLanguage
-        : $this->languageManager->getDefaultLanguage()->getId();
+        : $this->languageManager->getCurrentLanguage()->getId();
       $this->translationManager->setDefaultLangcode($defaultLangcode);
       $this->languageManager->setConfigOverrideLanguage($currentConfigLanguage);
     }

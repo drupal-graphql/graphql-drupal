@@ -24,7 +24,12 @@ graphql.graphql_servers.*:
       type: boolean
       label: 'Batching'
     schema_configuration:
-      type: 'graphql.schema.[%parent.schema]'
+      type: sequence
+      label: 'Schema configuration'
+      orderby: key
+      sequence:
+        type: 'graphql.schema.[%parent.schema]'
+        label: 'The configuration for a single schema extension.'
     persisted_queries_settings:
       type: sequence
       label: 'Persisted queries settings'
@@ -34,7 +39,7 @@ graphql.graphql_servers.*:
         label: 'The configuration for a single persisted query plugin.'
 
 graphql.schema.*:
-  type: mapping
+  type: graphql.schema.composable
   label: 'Schema settings'
 
 graphql.schema.composable:
@@ -45,7 +50,7 @@ graphql.schema.composable:
       label: Enabled extensions
       type: sequence
       sequence:
-        type: boolean
+        type: string
 
 graphql.default_persisted_query_configuration:
   type: mapping

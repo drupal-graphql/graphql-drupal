@@ -133,7 +133,7 @@ class EntityLoad extends DataProducerPluginBase implements ContainerFactoryPlugi
    * Resolver.
    *
    * @param string $type
-   * @param string $id
+   * @param string|int|null $id
    * @param string|null $language
    * @param array|null $bundles
    * @param bool|null $access
@@ -141,9 +141,15 @@ class EntityLoad extends DataProducerPluginBase implements ContainerFactoryPlugi
    * @param string|null $accessOperation
    * @param \Drupal\graphql\GraphQL\Execution\FieldContext $context
    *
-   * @return \GraphQL\Deferred
+   * @return \GraphQL\Deferred|null
    */
   public function resolve($type, $id, ?string $language, ?array $bundles, ?bool $access, ?AccountInterface $accessUser, ?string $accessOperation, FieldContext $context) {
+    // If this data producer was composed to a field (entity reference) and
+    // there is no ID then we can return immediately.
+    if ($id === NULL) {
+      return NULL;
+    }
+
     $resolver = $this->entityBuffer->add($type, $id);
 
     return new Deferred(function () use ($type, $language, $bundles, $resolver, $context, $access, $accessUser, $accessOperation) {

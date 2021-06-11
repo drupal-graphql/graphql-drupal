@@ -192,7 +192,7 @@ class EntityReference extends DataProducerPluginBase implements ContainerFactory
           /** @var \Drupal\Core\Entity\EntityTypeInterface $type */
           $tags = $type->getListCacheTags();
           $context->addCacheTags($tags);
-          return NULL;
+          return $entities;
         }
 
         return $entities;

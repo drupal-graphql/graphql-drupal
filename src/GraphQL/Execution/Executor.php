@@ -212,19 +212,29 @@ class Executor implements ExecutorImplementation {
    * {@inheritdoc}
    */
   public function doExecute(): Promise {
+    $event = new OperationEvent($this->context);
+    $this->dispatcher->dispatch(OperationEvent::GRAPHQL_OPERATION_BEFORE, $event);
+
     $server = $this->context->getServer();
     $operation_def = AST::getOperationAST($this->document, $this->operation);
     if ($operation_def && $operation_def->operation === 'query' && !!$server->get('caching')) {
-      return $this->doExecuteCached($this->cachePrefix());
+      $result = $this->doExecuteCached($this->cachePrefix());
+    }
+    else {
+      // This operation can never be cached because we are either in development
+      // mode (caching is disabled) or this is a non-cacheable operation.
+      $result = $this->doExecuteUncached()->then(function ($result) {
+        $this->context->mergeCacheMaxAge(0);
+
+        $result = new CacheableExecutionResult($result->data, $result->errors, $result->extensions);
+        $result->addCacheableDependency($this->context);
+        return $result;
+      });
     }
 
-    // This operation can never be cached because we are either in development
-    // mode (caching is disabled) or this is a non-cacheable operation.
-    return $this->doExecuteUncached()->then(function ($result) {
-      $this->context->mergeCacheMaxAge(0);
-
-      $result = new CacheableExecutionResult($result->data, $result->errors, $result->extensions);
-      $result->addCacheableDependency($this->context);
+    return $result->then(function ($result) {
+      $event = new OperationEvent($this->context, $result);
+      $this->dispatcher->dispatch(OperationEvent::GRAPHQL_OPERATION_AFTER, $event);
       return $result;
     });
   }
@@ -299,10 +309,17 @@ class Executor implements ExecutorImplementation {
     $extensions = $this->context->getOperation()->extensions ?: [];
     ksort($extensions);
 
+    // By firing the operation event before executing the operation and before
+    // reading from the cache different contexts might be set to control the
+    // caching and make it possible to cache e.g. by country.
+    $contexts = $this->context->getCacheContexts();
+    $keys = $this->contextsManager->convertTokensToKeys($contexts)->getKeys();
+
     $hash = hash('sha256', serialize([
       'query' => DocumentSerializer::serializeDocument($this->document),
       'variables' => $variables,
       'extensions' => $extensions,
+      'keys' => $keys,
     ]));
 
     return $hash;

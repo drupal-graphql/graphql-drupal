@@ -1,0 +1,4 @@
+type Car @dimensions(includeDepth: true) {
+  brand: String!
+  model: String!
+}

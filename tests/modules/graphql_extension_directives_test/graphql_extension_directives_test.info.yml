@@ -1,0 +1,7 @@
+name: Graphql Extension Directives Test
+type: module
+description: 'Test module for directives provided by extensions.'
+package: Testing
+core_version_requirement: ^8 || ^9
+dependencies:
+  - graphql:graphql

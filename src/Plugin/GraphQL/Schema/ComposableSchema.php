@@ -6,6 +6,8 @@ use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\graphql\GraphQL\DirectiveProviderExtensionInterface;
+use Drupal\graphql\GraphQL\ParentAwareSchemaExtensionInterface;
 use Drupal\graphql\GraphQL\ResolverRegistry;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
@@ -29,23 +31,58 @@ class ComposableSchema extends SdlSchemaPluginBase implements ConfigurableInterf
    * {@inheritdoc}
    */
   protected function getExtensions() {
-    return array_map(function ($id) {
+    $extensions = array_map(function ($id) {
       return $this->extensionManager->createInstance($id);
     }, array_filter($this->getConfiguration()['extensions']));
+
+    $schemaDocument = $this->getSchemaDocument($extensions);
+    // Iterate through all extensions and pass them the current schema, so they
+    // can act on it.
+    foreach ($extensions as $extension) {
+      if ($extension instanceof ParentAwareSchemaExtensionInterface) {
+        $extension->setParentSchemaDocument($schemaDocument);
+      }
+    }
+
+    return $extensions;
   }
 
   /**
    * {@inheritdoc}
    */
   protected function getSchemaDefinition() {
-    return <<<GQL
-      type Schema {
-        query: Query
+    $extensions = parent::getExtensions();
+
+    // Get all extensions and prepend any defined directives to the schema.
+    $schema = [];
+    foreach ($extensions as $extension) {
+      if ($extension instanceof DirectiveProviderExtensionInterface) {
+        $schema[] = $extension->getDirectiveDefinitions();
       }
+    }
 
-      type Query
+    // Attempt to load a schema file and return it instead of the hardcoded
+    // empty schema.
+    $id = $this->getPluginId();
+    $definition = $this->getPluginDefinition();
+    $module = $this->moduleHandler->getModule($definition['provider']);
+    $path = 'graphql/' . $id . '.graphqls';
+    $file = $module->getPath() . '/' . $path;
+
+    if (!file_exists($file)) {
+      $schema[] = <<<GQL
+        type Schema {
+          query: Query
+        }
+
+        type Query
 GQL;
+    }
+    else {
+      $schema[] = file_get_contents($file);
+    }
 
+    return implode("\n", $schema);
   }
 
   /**

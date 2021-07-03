@@ -36,7 +36,7 @@ class MenuTreeSubtree extends DataProducerPluginBase {
    */
   public function resolve(MenuLinkTreeElement $element) {
     return array_filter($element->subtree, function (MenuLinkTreeElement $item) {
-      return $item->link->isEnabled();
+      return $item->link->isEnabled() && $item->access->isAllowed();
     });
   }
 

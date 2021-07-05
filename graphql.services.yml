@@ -68,6 +68,14 @@ services:
     class: Drupal\graphql\GraphQL\Execution\ExecutorFactory
     arguments: ['@service_container']
 
+  # Deny caching of POST requests in the dynamic and standard page cache.
+  graphql.request_policy.deny_query:
+    public: false
+    class: Drupal\graphql\Cache\RequestPolicy\GetOnly
+    tags:
+      - { name: page_cache_request_policy }
+      - { name: dynamic_page_cache_request_policy }
+
   # Upcasting for graphql query request parameters.
   graphql.route_enhancer.query:
     class: Drupal\graphql\Routing\QueryRouteEnhancer

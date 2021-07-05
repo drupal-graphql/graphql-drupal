@@ -31,11 +31,13 @@ trait HttpRequestTrait {
    *   The query extensions.
    * @param bool $persisted
    *   Flag if the query is actually the identifier of a persisted query.
+   * @param string $method
+   *   Method, GET or POST.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The http response object.
    */
-  protected function query($query, $server = NULL, array $variables = [], array $extensions = NULL, $persisted = FALSE) {
+  protected function query($query, $server = NULL, array $variables = [], array $extensions = NULL, $persisted = FALSE, string $method = Request::METHOD_GET) {
     $server = $server ?: $this->server;
     if (!($server instanceof Server)) {
       throw new \LogicException('Invalid server.');
@@ -46,10 +48,16 @@ trait HttpRequestTrait {
     // If the persisted flag is true, then instead of sending the full query to
     // the server we only send the query id.
     $query_key = $persisted ? 'queryId' : 'query';
-    $request = Request::create($endpoint, 'GET', [
+    $data = [
       $query_key => $query,
       'variables' => $variables,
-    ] + $extensions);
+    ] + $extensions;
+    if ($method === Request::METHOD_GET) {
+      $request = Request::create($endpoint, $method, $data);
+    }
+    else {
+      $request = Request::create($endpoint, $method, [], [], [], [], json_encode($data));
+    }
 
     return $this->container->get('http_kernel')->handle($request);
   }

@@ -39,6 +39,14 @@ services:
     tags:
       - { name: cache.context }
 
+  # Cache bin for the persisted queries.
+  cache.graphql.apq:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: cache_factory:get
+    arguments: [graphql_apq]
+
   # Cache bin for the parsed sdl ast.
   cache.graphql.ast:
     class: Drupal\Core\Cache\CacheBackendInterface
@@ -105,6 +113,13 @@ services:
   graphql.operation_subscriber:
     class: Drupal\graphql\EventSubscriber\OperationSubscriber
     arguments: ['@module_handler', '@language_manager', '@string_translation', '@current_user', '@?language_negotiator']
+    tags:
+      - { name: event_subscriber }
+
+  # Cache the queries to be persistent.
+  graphql.apq_subscriber:
+    class: Drupal\graphql\EventSubscriber\ApqSubscriber
+    arguments: ['@cache.graphql.apq', '@request_stack']
     tags:
       - { name: event_subscriber }
 

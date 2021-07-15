@@ -287,6 +287,25 @@ class EntityTest extends GraphQLTestBase {
   }
 
   /**
+   * @covers \Drupal\graphql\Plugin\GraphQL\DataProducer\Entity\EntityUrl::resolve
+   */
+  public function testResolveAbsoluteUrl(): void {
+    $url = $this->getMockBuilder(Url::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $this->entity->expects($this->once())
+      ->method('toUrl')
+      ->with('canonical', ['absolute' => TRUE])
+      ->willReturn($url);
+
+    $this->assertEquals($url, $this->executeDataProducer('entity_url', [
+      'entity' => $this->entity,
+      'options' => ['absolute' => TRUE],
+    ]));
+  }
+
+  /**
    * @covers \Drupal\graphql\Plugin\GraphQL\DataProducer\Entity\EntityUuid::resolve
    */
   public function testResolveUuid(): void {

@@ -15,6 +15,14 @@ use Drupal\graphql\GraphQL\ResolverRegistryInterface;
 interface SchemaPluginInterface extends PluginInspectionInterface, DerivativeInspectionInterface {
 
   /**
+   * Set the serverID, required for cache id generation.
+   *
+   * @param string
+   *   The machine name of the server using this plugin.
+   */
+  public function setServerId(string $serverId): void;
+
+  /**
    * Retrieves the schema.
    *
    * @param \Drupal\graphql\GraphQL\ResolverRegistryInterface $registry

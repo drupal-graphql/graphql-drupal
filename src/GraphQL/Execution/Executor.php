@@ -300,6 +300,7 @@ class Executor implements ExecutorImplementation {
     ksort($extensions);
 
     $hash = hash('sha256', serialize([
+      'server' => $this->context->getServer()->name,
       'query' => DocumentSerializer::serializeDocument($this->document),
       'variables' => $variables,
       'extensions' => $extensions,

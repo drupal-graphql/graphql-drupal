@@ -211,6 +211,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
 
     /** @var \Drupal\graphql\Plugin\SchemaPluginInterface $plugin */
     $plugin = $manager->createInstance($schema);
+    $plugin->setServerId($this->name);
     if ($plugin instanceof ConfigurableInterface && $config = $this->get('schema_configuration')) {
       $plugin->setConfiguration($config[$schema] ?? []);
     }
